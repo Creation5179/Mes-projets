@@ -92,7 +92,7 @@ margin-bottom: 8px;
 /* Mise en page de l'accueil : tableau blanc en colonne latérale, sur toute la hauteur */
 .home-layout { display: flex; gap: 20px; align-items: stretch; margin-top: 10px; }
 .home-sidebar { flex: 0 0 260px; display: flex; flex-direction: column; margin-bottom: 0; }
-.home-main { flex: 1; min-width: 0; }
+.home-main { flex: 1; min-width: 0; } .home-layout--stacked { flex-direction: column; } .home-layout--stacked .home-sidebar { flex: 0 0 auto; width: 100%; } .home-layout--stacked .whiteboard-canvas { max-height: 240px; } .search-bar { margin-bottom: 16px; } .search-input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 0.9rem; box-sizing: border-box; } .search-results-list { margin-top: 8px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); } .search-result-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer; border-bottom: 1px solid var(--line); } .search-result-item:last-child { border-bottom: none; } .search-result-item:hover { background: var(--page-bg); } .search-result-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .search-result-loc { color: var(--ink-muted); font-size: 0.75rem; flex: 0 0 auto; } .search-empty { padding: 10px 2px; } .note-highlight { outline: 3px solid var(--accent-teal); outline-offset: 2px; }
 @media (max-width: 720px) {
 .home-layout { flex-direction: column; }
 .home-sidebar { flex: 1 1 auto; }
@@ -326,7 +326,7 @@ var modalState = null;
 var draftColor = COLORS[0];
 var dragState = null;
 var lastHighlighted = null;
-var lastRenderedViewType = null;
+var lastRenderedViewType = null; var searchQuery = "";
 
 /* ---------- Date / semaine helpers ---------- */
 function pad(n) { return n < 10 ? "0" + n : "" + n; }
@@ -414,7 +414,7 @@ for (var i = 0; i < notes.length; i++) if (notes[i].id === id) return notes[i];
 return null;
 }
 
-/* ---------- Rendu des post-it ---------- */ function renderTagsHtml(note) { var tags = note.tags || []; if (!tags.length) return ""; return '<div class="note-tags">' + tags.map(function (t) { return '<span class="tag-pill">' + escapeHtml(t) + '</span>'; }).join("") + '</div>'; } function computeNoteDate(loc, weekKey, day) { if (loc === "day" && weekKey && day) { var weeks = buildYearWeeks(new Date().getFullYear()); var w = null; for (var i = 0; i < weeks.length; i++) if (weeks[i].weekKey === weekKey) { w = weeks[i]; break; } if (w) { var idx = DAY_KEYS.indexOf(day); var d = new Date(w.start); d.setDate(d.getDate() + idx); return d; } } return new Date(); } function gcalDateStr(d) { return "" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()); } function openGoogleCalendar() { var ta = document.getElementById("note-text-input"); var text = ta ? ta.value.trim() : ""; if (!text) return; var loc = null, weekKey = null, day = null; if (modalState.mode === "edit") { var n = findNoteById(modalState.noteId); if (n) { loc = n.location; weekKey = n.weekKey; day = n.day; } } else { var ctx = modalState.context; loc = ctx.location; weekKey = ctx.weekKey; day = ctx.day; } var d = computeNoteDate(loc, weekKey, day); var startStr = gcalDateStr(d); var endD = new Date(d); endD.setDate(endD.getDate() + 1); var endStr = gcalDateStr(endD); var url = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(text) + "&dates=" + startStr + "/" + endStr; window.open(url, "_blank"); }
+/* ---------- Rendu des post-it ---------- */ function renderTagsHtml(note) { var tags = note.tags || []; if (!tags.length) return ""; return '<div class="note-tags">' + tags.map(function (t) { return '<span class="tag-pill">' + escapeHtml(t) + '</span>'; }).join("") + '</div>'; } function computeNoteDate(loc, weekKey, day) { if (loc === "day" && weekKey && day) { var weeks = buildYearWeeks(new Date().getFullYear()); var w = null; for (var i = 0; i < weeks.length; i++) if (weeks[i].weekKey === weekKey) { w = weeks[i]; break; } if (w) { var idx = DAY_KEYS.indexOf(day); var d = new Date(w.start); d.setDate(d.getDate() + idx); return d; } } return new Date(); } function gcalDateStr(d) { return "" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()); } function openGoogleCalendar() { var ta = document.getElementById("note-text-input"); var text = ta ? ta.value.trim() : ""; if (!text) return; var loc = null, weekKey = null, day = null; if (modalState.mode === "edit") { var n = findNoteById(modalState.noteId); if (n) { loc = n.location; weekKey = n.weekKey; day = n.day; } } else { var ctx = modalState.context; loc = ctx.location; weekKey = ctx.weekKey; day = ctx.day; } var d = computeNoteDate(loc, weekKey, day); var startStr = gcalDateStr(d); var endD = new Date(d); endD.setDate(endD.getDate() + 1); var endStr = gcalDateStr(endD); var url = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(text) + "&dates=" + startStr + "/" + endStr; window.open(url, "_blank"); } function matchesQuery(note, q) { q = q.toLowerCase(); if (note.text && note.text.toLowerCase().indexOf(q) !== -1) return true; if (note.tags && note.tags.some(function (t) { return t.toLowerCase().indexOf(q) !== -1; })) return true; return false; } function locationLabel(note) { if (note.location === "whiteboard") return "Tableau blanc"; if (note.location === "week") return "Semaine " + note.weekKey; if (note.location === "day") return (DAY_LABELS[DAY_KEYS.indexOf(note.day)] || "") + " · " + note.weekKey; return ""; } function buildSearchResultsHtml() { var q = searchQuery.trim(); if (!q) return ""; var matches = notes.filter(function (n) { return matchesQuery(n, q); }); if (!matches.length) return '<p class="empty-hint search-empty">Aucun résultat.</p>'; return '<div class="search-results-list">' + matches.map(function (n) { return '<div class="search-result-item" data-id="' + n.id + '" data-location="' + n.location + '" data-week="' + (n.weekKey || "") + '" data-day="' + (n.day || "") + '"><span class="search-result-text">' + escapeHtml(n.text) + '</span><span class="search-result-loc">' + locationLabel(n) + '</span></div>'; }).join("") + '</div>'; } function attachSearchResultHandlers() { document.querySelectorAll(".search-result-item").forEach(function (el) { el.addEventListener("click", function () { jumpToSearchResult(el.dataset.id, el.dataset.location, el.dataset.week, el.dataset.day); }); }); } function updateSearchResults() { var container = document.getElementById("search-results"); if (!container) return; container.innerHTML = buildSearchResultsHtml(); attachSearchResultHandlers(); } function jumpToSearchResult(id, location, weekKey, day) { if (location === "whiteboard") { var el = document.querySelector('.note[data-id="' + id + '"]'); if (el) { el.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" }); el.classList.add("note-highlight"); setTimeout(function () { el.classList.remove("note-highlight"); }, 1500); } } else if (location === "week") { navigateTo({ type: "week", weekKey: weekKey }); } else if (location === "day") { navigateTo({ type: "day", weekKey: weekKey, day: day }); } }
 function renderFreeNote(note) {
 var rot = hashRotation(note.id);
 return '<div class="note note--free" data-id="' + note.id + '" style="left:' + note.x + 'px; top:' + note.y + 'px; background:' + note.color + '; transform:rotate(' + rot + 'deg);">' +
@@ -477,7 +477,7 @@ var currentMonthIdx = new Date().getMonth();
 var wbNotes = notes.filter(function (n) { return n.location === "whiteboard"; });
 var wbHtml = wbNotes.length ? wbNotes.map(renderFreeNote).join("") : '<p class="empty-hint">Aucun post-it pour l\'instant. Touche « + Post-it » pour en ajouter un.</p>';
 var monthsHtml = MONTH_NAMES.map(function (name, idx) { return renderMonthBlock(year, idx, name, idx === currentMonthIdx); }).join("");
-return '<div class="home-layout">' +
+return '<div class="search-bar"><input type="text" id="search-input" class="search-input" placeholder="Rechercher un post-it (texte ou tag)…" value="' + escapeHtml(searchQuery) + '" /><div id="search-results">' + buildSearchResultsHtml() + '</div></div>' + '<div class="home-layout home-layout--stacked">' +
 '<section class="board-section home-sidebar">' +
 '<div class="whiteboard-canvas" data-dropzone="whiteboard">' + wbHtml + '</div>' +
 '</section>' +
@@ -666,7 +666,7 @@ var current = document.getElementById("month-current");
 if (current) current.scrollIntoView({ inline: "start", block: "nearest" });
 }
 
-function attachHandlers() {
+function attachHandlers() { var searchInputEl = document.getElementById("search-input"); if (searchInputEl) searchInputEl.addEventListener("input", function () { searchQuery = searchInputEl.value; updateSearchResults(); }); attachSearchResultHandlers();
 document.querySelectorAll("[data-nav]").forEach(function (el) {
 el.addEventListener("click", function () {
 handleNav(el.dataset.nav, el.dataset.week, el.dataset.day);
@@ -838,8 +838,8 @@ createdAt: Date.now()
 };
 if (ctx.location === "whiteboard") {
 var count = notes.filter(function (nn) { return nn.location === "whiteboard"; }).length;
-note.x = 12 + (count % 2) * 130;
-note.y = 12 + Math.floor(count / 2) * 96;
+note.x = 12 + (count % 6) * 130;
+note.y = 12 + Math.floor(count / 6) * 96;
 }
 notes.push(note);
 }
