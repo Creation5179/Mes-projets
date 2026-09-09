@@ -78,8 +78,14 @@
   .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
   .btn-danger { background: var(--accent-red); color: #fff; }
 
-  /* Mise en page de l'accueil : priorités en haut, tableau blanc et backlog empilés en dessous */
-  .home-layout { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+  /* Mise en page de l'accueil : tableau blanc en colonne latérale, sur toute la hauteur */
+  .home-layout { display: flex; gap: 20px; align-items: stretch; margin-top: 10px; }
+  .home-sidebar { flex: 0 0 260px; display: flex; flex-direction: column; margin-bottom: 0; }
+  .home-main { flex: 1; min-width: 0; }
+  @media (max-width: 720px) {
+    .home-layout { flex-direction: column; }
+    .home-sidebar { flex: 1 1 auto; }
+  }
 
   /* Whiteboard */
   .board-section { margin-bottom: 28px; }
@@ -95,13 +101,10 @@
     overflow: auto;
     padding: 4px;
   }
-  .whiteboard-canvas--empty {
-    border: none;
-    background: none;
-    min-height: 0;
-    padding: 0;
+  .home-sidebar .whiteboard-canvas { flex: 1; max-height: none; }
+  @media (max-width: 720px) {
+    .home-sidebar .whiteboard-canvas { max-height: 420px; flex: none; }
   }
-  .whiteboard-canvas--empty .empty-hint { padding: 6px 2px; }
   .empty-hint { color: var(--ink-muted); font-size: 0.85rem; padding: 14px; margin: 0; }
   .empty-hint--sm { padding: 4px 2px; font-size: 0.78rem; }
 
@@ -460,14 +463,14 @@
     var year = new Date().getFullYear();
     var currentMonthIdx = new Date().getMonth();
     var wbNotes = notes.filter(function (n) { return n.location === "whiteboard"; });
-    var hasWb = wbNotes.length > 0;
-    var wbHtml = hasWb ? wbNotes.map(renderFreeNote).join("") : '<p class="empty-hint">Aucun post-it pour l\'instant. Touche « + Post-it » pour en ajouter un.</p>';
+    var wbHtml = wbNotes.length ? wbNotes.map(renderFreeNote).join("") : '<p class="empty-hint">Aucun post-it pour l\'instant. Touche « + Post-it » pour en ajouter un.</p>';
     var monthsHtml = MONTH_NAMES.map(function (name, idx) { return renderMonthBlock(year, idx, name, idx === currentMonthIdx); }).join("");
     return '<div class="home-layout">' +
-      renderMatrix() +
-      '<section class="board-section">' +
-      '<div class="whiteboard-canvas' + (hasWb ? '' : ' whiteboard-canvas--empty') + '" data-dropzone="whiteboard">' + wbHtml + '</div>' +
+      '<section class="board-section home-sidebar">' +
+      '<div class="whiteboard-canvas" data-dropzone="whiteboard">' + wbHtml + '</div>' +
       '</section>' +
+      '<div class="home-main">' +
+      renderMatrix() +
       '<section class="backlog-section">' +
       '<div class="calendar-scroll-wrap">' +
       '<button type="button" class="cal-arrow" data-cal-scroll="-1" aria-label="Mois précédents">‹</button>' +
@@ -475,6 +478,7 @@
       '<button type="button" class="cal-arrow" data-cal-scroll="1" aria-label="Mois suivants">›</button>' +
       '</div>' +
       '</section>' +
+      '</div>' +
       '</div>';
   }
 
