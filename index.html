@@ -455,7 +455,7 @@ return '<section class="matrix-section">' +
 function renderHeader() {
 if (currentView.type === "day") {
 return '<header class="app-header app-header--simple">' +
-'<button type="button" class="back-arrow" data-nav="week" data-week="' + currentView.weekKey + '" aria-label="Retour à la semaine">‹</button>' +
+
 '<span class="brand brand--link" data-nav="home">Todo TDAH Friendly</span>' + '<button class="btn btn-add" data-add-loc="whiteboard" style="margin-left:auto;">+ Post-it</button>' +
 '</header>';
 }
@@ -554,7 +554,7 @@ for (var i = 0; i < weeks.length; i++) if (weeks[i].weekKey === weekKey) { w = w
 if (!w) {
 return '<div class="view-title"><h2>Semaine introuvable</h2></div><p class="empty-hint">Cette semaine ne fait plus partie du backlog de l\'année en cours.</p>';
 }
-var backlogNotes = notes.filter(function (n) { return n.location === "week" && n.weekKey === weekKey; });
+var prevWeek = i > 0 ? weeks[i - 1] : null; var nextWeek = i < weeks.length - 1 ? weeks[i + 1] : null; var backlogNotes = notes.filter(function (n) { return n.location === "week" && n.weekKey === weekKey; });
 var fmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
 var todayStr = new Date().toDateString();
 
@@ -578,7 +578,7 @@ DAY_LABELS[idx] + ' <span class="col-date">' + fmt.format(d) + '</span> <span cl
 '</div></div>';
 }).join("");
 
-return '<div class="home-layout">' + renderWhiteboardSidebar() + '<div class="home-main"><div class="view-title"><h2>Semaine ' + w.weekNum + ' <span class="muted">— ' + formatWeekRange(w.start, w.end) + '</span></h2></div>' +
+return '<div class="home-layout">' + renderWhiteboardSidebar() + '<div class="home-main"><div class="view-title"><h2>' + (prevWeek ? '<button type="button" class="back-arrow" data-nav="week" data-week="' + prevWeek.weekKey + '" aria-label="Semaine précédente">‹</button>' : '') + 'Semaine ' + w.weekNum + ' <span class="muted">— ' + formatWeekRange(w.start, w.end) + '</span>' + (nextWeek ? '<button type="button" class="back-arrow" style="margin-right:0;margin-left:4px;" data-nav="week" data-week="' + nextWeek.weekKey + '" aria-label="Semaine suivante">›</button>' : '') + '</h2></div>' +
 '<div class="kanban-row">' + backlogCol + dayCols + '</div></div></div>';
 }
 
@@ -607,7 +607,7 @@ return '<div class="kanban-column">' +
 '<button class="btn-add-col" data-add-loc="day" data-week="' + weekKey + '" data-day="' + day + '" data-status="' + s.key + '">+ Ajouter</button>' +
 '</div></div>';
 }).join("");
-return '<div class="home-layout">' + renderWhiteboardSidebar() + '<div class="home-main"><div class="view-title"><h2>' + DAY_LABELS[idx] + ' <span class="muted">' + fmtFull.format(d) + '</span></h2></div>' +
+return '<div class="home-layout">' + renderWhiteboardSidebar() + '<div class="home-main"><div class="view-title"><h2><button type="button" class="back-arrow" data-nav="week" data-week="' + weekKey + '" aria-label="Retour à la semaine">‹</button>' + DAY_LABELS[idx] + ' <span class="muted">' + fmtFull.format(d) + '</span></h2></div>' +
 '<div class="kanban-row">' + cols + '</div></div></div>';
 }
 
