@@ -428,7 +428,7 @@ return '<div class="note note--flow" data-id="' + note.id + '" style="background
 '<div class="note-text">' + escapeHtml(note.text) + '</div></div>';
 }
 
-function emptyColHint() { return '<p class="empty-hint empty-hint--sm">Vide</p>'; }
+function emptyColHint() { return '<p class="empty-hint empty-hint--sm">Vide</p>'; } function renderWhiteboardSidebar() { var wbNotes = notes.filter(function (n) { return n.location === "whiteboard"; }); var wbHtml = wbNotes.length ? wbNotes.map(renderFreeNote).join("") : '<p class="empty-hint">Aucun post-it pour l\'instant.</p>'; return '<section class="board-section home-sidebar"><div class="whiteboard-canvas" data-dropzone="whiteboard">' + wbHtml + '</div></section>'; }
 
 var MATRIX_QUADRANTS = [
 { key: "urgent-important", label: "Important et urgent" },
@@ -578,8 +578,8 @@ DAY_LABELS[idx] + ' <span class="col-date">' + fmt.format(d) + '</span> <span cl
 '</div></div>';
 }).join("");
 
-return '<div class="view-title"><h2>Semaine ' + w.weekNum + ' <span class="muted">— ' + formatWeekRange(w.start, w.end) + '</span></h2></div>' +
-'<div class="kanban-row">' + backlogCol + dayCols + '</div>';
+return '<div class="home-layout">' + renderWhiteboardSidebar() + '<div class="home-main"><div class="view-title"><h2>Semaine ' + w.weekNum + ' <span class="muted">— ' + formatWeekRange(w.start, w.end) + '</span></h2></div>' +
+'<div class="kanban-row">' + backlogCol + dayCols + '</div></div></div>';
 }
 
 function renderDayView(weekKey, day) {
@@ -607,8 +607,8 @@ return '<div class="kanban-column">' +
 '<button class="btn-add-col" data-add-loc="day" data-week="' + weekKey + '" data-day="' + day + '" data-status="' + s.key + '">+ Ajouter</button>' +
 '</div></div>';
 }).join("");
-return '<div class="view-title"><h2>' + DAY_LABELS[idx] + ' <span class="muted">' + fmtFull.format(d) + '</span></h2></div>' +
-'<div class="kanban-row">' + cols + '</div>';
+return '<div class="home-layout">' + renderWhiteboardSidebar() + '<div class="home-main"><div class="view-title"><h2>' + DAY_LABELS[idx] + ' <span class="muted">' + fmtFull.format(d) + '</span></h2></div>' +
+'<div class="kanban-row">' + cols + '</div></div></div>';
 }
 
 function renderModal() {
