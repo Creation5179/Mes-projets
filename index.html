@@ -596,7 +596,7 @@ var statuses = [
 { key: "todo", label: "À faire du jour" },
 { key: "in-progress", label: "En cours" },
 { key: "waiting", label: "En attente" },
-{ key: "done", label: "Terminé" }
+{ key: "done", label: "Terminé" }, { key: "abandoned", label: "Abandonné" }
 ];
 var cols = statuses.map(function (s) {
 var sNotes = notes.filter(function (n) { return n.location === "day" && n.weekKey === weekKey && n.day === day && n.status === s.key; });
