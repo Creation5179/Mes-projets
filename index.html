@@ -32,7 +32,7 @@ button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
 display: flex; align-items: center; justify-content: space-between;
 padding-bottom: 10px; margin-bottom: 4px;
 }
-.app-header--day { justify-content: flex-start; gap: 4px; }
+.app-header--simple { justify-content: flex-start; gap: 4px; }
 .brand { font-size: 1.65rem; font-weight: 800; letter-spacing: -0.01em; color: var(--accent-teal-dark); }
 .brand--link { cursor: pointer; }
 .brand--link:hover { color: var(--accent-teal); }
@@ -454,23 +454,21 @@ return '<section class="matrix-section">' +
 /* ---------- Vues ---------- */
 function renderHeader() {
 if (currentView.type === "day") {
-return '<header class="app-header app-header--day">' +
+return '<header class="app-header app-header--simple">' +
 '<button type="button" class="back-arrow" data-nav="week" data-week="' + currentView.weekKey + '" aria-label="Retour à la semaine">‹</button>' +
 '<span class="brand brand--link" data-nav="home">Todo TDAH Friendly</span>' +
 '</header>';
 }
-var crumb = "";
 if (currentView.type === "week") {
-var backArrow = '<button type="button" class="back-arrow" data-nav="home" aria-label="Retour à l\'accueil">‹</button>';
-crumb = backArrow + '<span class="crumb" data-nav="home">Todo TDAH Friendly</span>';
-crumb += ' <span class="sep">/</span> <span class="crumb crumb--active" data-nav="week" data-week="' + currentView.weekKey + '">Semaine</span>';
+return '<header class="app-header app-header--simple">' +
+'<span class="brand brand--link" data-nav="home">Todo TDAH Friendly</span>' +
+'</header>';
 }
 var postItBtn = currentView.type === "home" ? '<button class="btn btn-add" data-add-loc="whiteboard">+ Post-it</button>' : "";
 return '<header class="app-header"><div class="brand">Todo TDAH Friendly</div>' +
 '<div class="header-actions"><button class="btn-reset" data-action="lock">Verrouiller</button>' +
 '<button class="btn-reset" data-action="reset">Réinitialiser</button>' +
-postItBtn + '</div></header>' +
-(crumb ? '<nav class="breadcrumb">' + crumb + '</nav>' : '');
+postItBtn + '</div></header>';
 }
 
 function renderHome() {
