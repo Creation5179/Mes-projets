@@ -186,6 +186,38 @@
   .day-cell.today .day-num { color: var(--accent-red); font-weight: 700; }
   .cell-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 1px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
 
+  /* Matrice de priorités (Eisenhower) */
+  .matrix-section { margin-bottom: 28px; }
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .matrix-cell {
+    background: var(--surface);
+    border: 2px solid var(--accent-teal);
+    border-radius: 10px;
+    padding: 10px;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+  }
+  .matrix-cell-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 6px;
+    margin-bottom: 8px;
+  }
+  .matrix-cell-head span { font-size: 0.78rem; font-weight: 700; color: var(--accent-teal-dark); line-height: 1.25; }
+  .matrix-cell-body {
+    flex: 1;
+    min-height: 90px;
+    border-radius: 8px;
+    padding: 2px;
+    transition: outline-color 0.1s;
+  }
+  @media (max-width: 480px) {
+    .matrix-grid { grid-template-columns: 1fr; }
+  }
+
   /* Kanban */
   .kanban-row {
     display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;
@@ -374,6 +406,28 @@
 
   function emptyColHint() { return '<p class="empty-hint empty-hint--sm">Vide</p>'; }
 
+  var MATRIX_QUADRANTS = [
+    { key: "urgent-important", label: "Important et urgent" },
+    { key: "urgent-not-important", label: "Urgent mais pas important" },
+    { key: "important-not-urgent", label: "Important mais pas urgent" },
+    { key: "neither", label: "Pas urgent et pas important" }
+  ];
+
+  function renderMatrix() {
+    var cellsHtml = MATRIX_QUADRANTS.map(function (q) {
+      var qNotes = notes.filter(function (n) { return n.location === "matrix" && n.quadrant === q.key; });
+      return '<div class="matrix-cell">' +
+        '<div class="matrix-cell-head"><span>' + q.label + '</span><button class="btn-add-col" style="width:auto;" data-add-loc="matrix" data-quadrant="' + q.key + '">+ Ajouter</button></div>' +
+        '<div class="matrix-cell-body" data-dropzone="matrix:' + q.key + '">' +
+        (qNotes.map(renderFlowNote).join("") || emptyColHint()) +
+        '</div></div>';
+    }).join("");
+    return '<section class="matrix-section">' +
+      '<div class="section-head"><h2>Priorités</h2></div>' +
+      '<div class="matrix-grid">' + cellsHtml + '</div>' +
+      '</section>';
+  }
+
   /* ---------- Vues ---------- */
   function renderHeader() {
     var crumb = '<span class="crumb" data-nav="home">🏠 Accueil</span>';
@@ -400,6 +454,7 @@
       '<div class="section-head"><h2>Tableau blanc</h2><button class="btn btn-add" data-add-loc="whiteboard">+ Post-it</button></div>' +
       '<div class="whiteboard-canvas" data-dropzone="whiteboard">' + wbHtml + '</div>' +
       '</section>' +
+      renderMatrix() +
       '<section class="backlog-section">' +
       '<div class="section-head"><h2>Backlog ' + year + '</h2></div>' +
       '<div class="calendar-scroll-wrap">' +
@@ -595,7 +650,8 @@
           location: btn.dataset.addLoc,
           weekKey: btn.dataset.week || null,
           day: btn.dataset.day || null,
-          status: btn.dataset.status || null
+          status: btn.dataset.status || null,
+          quadrant: btn.dataset.quadrant || null
         });
       });
     });
@@ -747,6 +803,7 @@
         weekKey: ctx.weekKey || null,
         day: ctx.day || null,
         status: ctx.location === "day" ? (ctx.status || "todo") : null,
+        quadrant: ctx.location === "matrix" ? (ctx.quadrant || "neither") : null,
         x: 0, y: 0,
         createdAt: Date.now()
       };
@@ -863,14 +920,17 @@
       note.location = "whiteboard";
       note.x = Math.max(4, x);
       note.y = Math.max(4, y);
-      note.weekKey = null; note.day = null; note.status = null;
+      note.weekKey = null; note.day = null; note.status = null; note.quadrant = null;
     } else if (parts[0] === "week") {
-      note.location = "week"; note.weekKey = parts[1]; note.day = null; note.status = null;
+      note.location = "week"; note.weekKey = parts[1]; note.day = null; note.status = null; note.quadrant = null;
     } else if (parts[0] === "day") {
       note.location = "day"; note.weekKey = parts[1]; note.day = parts[2];
       note.status = note.status || "todo";
+      note.quadrant = null;
     } else if (parts[0] === "daystatus") {
-      note.location = "day"; note.weekKey = parts[1]; note.day = parts[2]; note.status = parts[3];
+      note.location = "day"; note.weekKey = parts[1]; note.day = parts[2]; note.status = parts[3]; note.quadrant = null;
+    } else if (parts[0] === "matrix") {
+      note.location = "matrix"; note.quadrant = parts[1]; note.weekKey = null; note.day = null; note.status = null;
     }
     saveNotes();
   }
