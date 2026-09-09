@@ -151,7 +151,7 @@ padding: 2px 4px;
 .note-delete:hover { color: rgba(0,0,0,0.75); }
 .note-ghost { opacity: 0.9; pointer-events: none; }
 .note-ghost .note-delete { display: none; }
-.note-source-hidden { visibility: hidden; }
+.note-source-hidden { visibility: hidden; } .note-tags { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 3px; } .tag-pill { background: rgba(0,0,0,0.12); color: inherit; font-size: 0.68rem; padding: 1px 6px; border-radius: 10px; line-height: 1.4; }
 
 /* Backlog en format calendrier, mois par mois, en scroll horizontal */
 .calendar-scroll-wrap { display: flex; align-items: center; gap: 6px; }
@@ -294,7 +294,7 @@ width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;
 cursor: pointer; padding: 0;
 }
 .swatch.selected { border-color: var(--ink); }
-.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; } .tags-input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 0.85rem; margin-top: 8px; box-sizing: border-box; }
 
 @media (min-width: 620px) {
 .overlay { align-items: center; }
@@ -414,18 +414,18 @@ for (var i = 0; i < notes.length; i++) if (notes[i].id === id) return notes[i];
 return null;
 }
 
-/* ---------- Rendu des post-it ---------- */
+/* ---------- Rendu des post-it ---------- */ function renderTagsHtml(note) { var tags = note.tags || []; if (!tags.length) return ""; return '<div class="note-tags">' + tags.map(function (t) { return '<span class="tag-pill">' + escapeHtml(t) + '</span>'; }).join("") + '</div>'; } function computeNoteDate(loc, weekKey, day) { if (loc === "day" && weekKey && day) { var weeks = buildYearWeeks(new Date().getFullYear()); var w = null; for (var i = 0; i < weeks.length; i++) if (weeks[i].weekKey === weekKey) { w = weeks[i]; break; } if (w) { var idx = DAY_KEYS.indexOf(day); var d = new Date(w.start); d.setDate(d.getDate() + idx); return d; } } return new Date(); } function gcalDateStr(d) { return "" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()); } function openGoogleCalendar() { var ta = document.getElementById("note-text-input"); var text = ta ? ta.value.trim() : ""; if (!text) return; var loc = null, weekKey = null, day = null; if (modalState.mode === "edit") { var n = findNoteById(modalState.noteId); if (n) { loc = n.location; weekKey = n.weekKey; day = n.day; } } else { var ctx = modalState.context; loc = ctx.location; weekKey = ctx.weekKey; day = ctx.day; } var d = computeNoteDate(loc, weekKey, day); var startStr = gcalDateStr(d); var endD = new Date(d); endD.setDate(endD.getDate() + 1); var endStr = gcalDateStr(endD); var url = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(text) + "&dates=" + startStr + "/" + endStr; window.open(url, "_blank"); }
 function renderFreeNote(note) {
 var rot = hashRotation(note.id);
 return '<div class="note note--free" data-id="' + note.id + '" style="left:' + note.x + 'px; top:' + note.y + 'px; background:' + note.color + '; transform:rotate(' + rot + 'deg);">' +
 '<button class="note-delete" data-id="' + note.id + '" aria-label="Supprimer">×</button>' +
-'<div class="note-text">' + escapeHtml(note.text) + '</div></div>';
+'<div class="note-text">' + escapeHtml(note.text) + '</div>' + renderTagsHtml(note) + '</div>';
 }
 
 function renderFlowNote(note) {
 return '<div class="note note--flow" data-id="' + note.id + '" style="background:' + note.color + ';">' +
 '<button class="note-delete" data-id="' + note.id + '" aria-label="Supprimer">×</button>' +
-'<div class="note-text">' + escapeHtml(note.text) + '</div></div>';
+'<div class="note-text">' + escapeHtml(note.text) + '</div>' + renderTagsHtml(note) + '</div>';
 }
 
 function emptyColHint() { return '<p class="empty-hint empty-hint--sm">Vide</p>'; } function renderWhiteboardSidebar() { var wbNotes = notes.filter(function (n) { return n.location === "whiteboard"; }); var wbHtml = wbNotes.length ? wbNotes.map(renderFreeNote).join("") : '<p class="empty-hint">Aucun post-it pour l\'instant.</p>'; return '<section class="board-section home-sidebar"><div class="whiteboard-canvas" data-dropzone="whiteboard">' + wbHtml + '</div></section>'; }
@@ -482,7 +482,7 @@ return '<div class="home-layout">' +
 '<div class="whiteboard-canvas" data-dropzone="whiteboard">' + wbHtml + '</div>' +
 '</section>' +
 '<div class="home-main">' +
-renderMatrix() +
+
 '<section class="backlog-section">' +
 '<div class="calendar-scroll-wrap">' +
 '<button type="button" class="cal-arrow" data-cal-scroll="-1" aria-label="Mois précédents">‹</button>' +
@@ -622,10 +622,10 @@ return '<div class="overlay" data-overlay="1"><div class="modal-card modal-card-
 '</div></div></div>';
 }
 var isEdit = modalState.mode === "edit";
-var currentText = "";
+var currentText = ""; var currentTags = "";
 if (isEdit) {
 var n = findNoteById(modalState.noteId);
-currentText = n ? n.text : "";
+currentText = n ? n.text : ""; currentTags = n && n.tags ? n.tags.join(", ") : "";
 }
 var swatches = COLORS.map(function (c) {
 return '<button type="button" class="swatch' + (c === draftColor ? " selected" : "") + '" data-color="' + c + '" style="background:' + c + '"></button>';
@@ -633,9 +633,9 @@ return '<button type="button" class="swatch' + (c === draftColor ? " selected" :
 return '<div class="overlay" data-overlay="1"><div class="modal-card">' +
 '<h3>' + (isEdit ? "Modifier le post-it" : "Nouveau post-it") + '</h3>' +
 '<textarea id="note-text-input" rows="3" placeholder="Écris ta tâche…">' + escapeHtml(currentText) + '</textarea>' +
-'<div class="swatches">' + swatches + '</div>' +
+'<input type="text" id="note-tags-input" class="tags-input" placeholder="Tags (séparés par des virgules)" value="' + escapeHtml(currentTags) + '" />' + '<div class="swatches">' + swatches + '</div>' +
 '<div class="modal-actions">' +
-(isEdit ? '<button class="btn btn-danger" data-action="delete-note">Supprimer</button>' : "") +
+(isEdit ? '<button class="btn btn-danger" data-action="delete-note">Supprimer</button>' : "") + '<button class="btn btn-ghost" type="button" data-action="gcal">📅 Rappel</button>' +
 '<button class="btn btn-ghost" data-action="cancel-modal">Annuler</button>' +
 '<button class="btn btn-primary" data-action="save-note">' + (isEdit ? "Enregistrer" : "Ajouter") + '</button>' +
 '</div></div></div>';
@@ -745,7 +745,7 @@ var cancelBtn = document.querySelector('[data-action="cancel-modal"]');
 if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
 
 var delBtn = document.querySelector('[data-action="delete-note"]');
-if (delBtn) delBtn.addEventListener("click", deleteEditingNote);
+if (delBtn) delBtn.addEventListener("click", deleteEditingNote); var gcalBtn = document.querySelector('[data-action="gcal"]'); if (gcalBtn) gcalBtn.addEventListener("click", openGoogleCalendar);
 
 var confirmYes = document.querySelector('[data-action="confirm-yes"]');
 if (confirmYes) confirmYes.addEventListener("click", function () {
@@ -820,14 +820,14 @@ render();
 function saveEditor() {
 var ta = document.getElementById("note-text-input");
 var text = ta ? ta.value.trim() : "";
-if (!text) return;
+if (!text) return; var tagsInputEl = document.getElementById("note-tags-input"); var tags = tagsInputEl && tagsInputEl.value.trim() ? tagsInputEl.value.split(",").map(function (t) { return t.trim(); }).filter(function (t) { return t; }) : [];
 if (modalState.mode === "edit") {
 var n = findNoteById(modalState.noteId);
-if (n) { n.text = text; n.color = draftColor; }
+if (n) { n.text = text; n.color = draftColor; n.tags = tags; }
 } else {
 var ctx = modalState.context;
 var note = {
-id: genId(), text: text, color: draftColor,
+id: genId(), text: text, color: draftColor, tags: tags,
 location: ctx.location,
 weekKey: ctx.weekKey || null,
 day: ctx.day || null,
