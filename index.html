@@ -456,12 +456,12 @@ function renderHeader() {
 if (currentView.type === "day") {
 return '<header class="app-header app-header--simple">' +
 '<button type="button" class="back-arrow" data-nav="week" data-week="' + currentView.weekKey + '" aria-label="Retour à la semaine">‹</button>' +
-'<span class="brand brand--link" data-nav="home">Todo TDAH Friendly</span>' +
+'<span class="brand brand--link" data-nav="home">Todo TDAH Friendly</span>' + '<button class="btn btn-add" data-add-loc="whiteboard" style="margin-left:auto;">+ Post-it</button>' +
 '</header>';
 }
 if (currentView.type === "week") {
 return '<header class="app-header app-header--simple">' +
-'<span class="brand brand--link" data-nav="home">Todo TDAH Friendly</span>' +
+'<span class="brand brand--link" data-nav="home">Todo TDAH Friendly</span>' + '<button class="btn btn-add" data-add-loc="whiteboard" style="margin-left:auto;">+ Post-it</button>' +
 '</header>';
 }
 var postItBtn = currentView.type === "home" ? '<button class="btn btn-add" data-add-loc="whiteboard">+ Post-it</button>' : "";
