@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Organisateur</title>
+<title>TODO TDAH</title>
 <style>
   :root {
     --ink: #24303A;
@@ -25,7 +25,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
-  .app-shell { max-width: 920px; margin: 0 auto; padding: 14px 14px 48px; }
+  .app-shell { max-width: 1100px; margin: 0 auto; padding: 14px 14px 48px; }
 
   /* Header + breadcrumb */
   .app-header {
@@ -78,6 +78,15 @@
   .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
   .btn-danger { background: var(--accent-red); color: #fff; }
 
+  /* Mise en page de l'accueil : tableau blanc en colonne latérale, sur toute la hauteur */
+  .home-layout { display: flex; gap: 20px; align-items: stretch; }
+  .home-sidebar { flex: 0 0 260px; display: flex; flex-direction: column; margin-bottom: 0; }
+  .home-main { flex: 1; min-width: 0; }
+  @media (max-width: 720px) {
+    .home-layout { flex-direction: column; }
+    .home-sidebar { flex: 1 1 auto; }
+  }
+
   /* Whiteboard */
   .board-section { margin-bottom: 28px; }
   .whiteboard-canvas {
@@ -91,6 +100,10 @@
     max-height: 420px;
     overflow: auto;
     padding: 4px;
+  }
+  .home-sidebar .whiteboard-canvas { flex: 1; max-height: none; }
+  @media (max-width: 720px) {
+    .home-sidebar .whiteboard-canvas { max-height: 420px; flex: none; }
   }
   .empty-hint { color: var(--ink-muted); font-size: 0.85rem; padding: 14px; margin: 0; }
   .empty-hint--sm { padding: 4px 2px; font-size: 0.78rem; }
@@ -430,7 +443,7 @@
 
   /* ---------- Vues ---------- */
   function renderHeader() {
-    var crumb = '<span class="crumb" data-nav="home">🏠 Accueil</span>';
+    var crumb = '<span class="crumb" data-nav="home">🏠 TODO TDAH</span>';
     if (currentView.type === "week" || currentView.type === "day") {
       crumb += ' <span class="sep">/</span> <span class="crumb' + (currentView.type === "week" ? " crumb--active" : "") + '" data-nav="week" data-week="' + currentView.weekKey + '">Semaine</span>';
     }
@@ -438,7 +451,7 @@
       var idx = DAY_KEYS.indexOf(currentView.day);
       crumb += ' <span class="sep">/</span> <span class="crumb crumb--active">' + DAY_LABELS[idx] + '</span>';
     }
-    return '<header class="app-header"><div class="brand">🗂️ Organisateur</div>' +
+    return '<header class="app-header"><div class="brand">🗂️ TODO TDAH</div>' +
       '<div class="header-actions"><button class="btn-reset" data-action="lock">Verrouiller</button>' +
       '<button class="btn-reset" data-action="reset">Réinitialiser</button></div></header>' +
       '<nav class="breadcrumb">' + crumb + '</nav>';
@@ -450,10 +463,12 @@
     var wbNotes = notes.filter(function (n) { return n.location === "whiteboard"; });
     var wbHtml = wbNotes.length ? wbNotes.map(renderFreeNote).join("") : '<p class="empty-hint">Aucun post-it pour l\'instant. Touche « + Post-it » pour en ajouter un.</p>';
     var monthsHtml = MONTH_NAMES.map(function (name, idx) { return renderMonthBlock(year, idx, name, idx === currentMonthIdx); }).join("");
-    return '<section class="board-section">' +
+    return '<div class="home-layout">' +
+      '<section class="board-section home-sidebar">' +
       '<div class="section-head"><h2>Tableau blanc</h2><button class="btn btn-add" data-add-loc="whiteboard">+ Post-it</button></div>' +
       '<div class="whiteboard-canvas" data-dropzone="whiteboard">' + wbHtml + '</div>' +
       '</section>' +
+      '<div class="home-main">' +
       renderMatrix() +
       '<section class="backlog-section">' +
       '<div class="section-head"><h2>Backlog ' + year + '</h2></div>' +
@@ -462,7 +477,9 @@
       '<div class="calendar-months" id="calendar-months">' + monthsHtml + '</div>' +
       '<button type="button" class="cal-arrow" data-cal-scroll="1" aria-label="Mois suivants">›</button>' +
       '</div>' +
-      '</section>';
+      '</section>' +
+      '</div>' +
+      '</div>';
   }
 
   function buildMonthGrid(year, monthIndex) {
@@ -809,8 +826,8 @@
       };
       if (ctx.location === "whiteboard") {
         var count = notes.filter(function (nn) { return nn.location === "whiteboard"; }).length;
-        note.x = 16 + (count % 4) * 132;
-        note.y = 16 + Math.floor(count / 4) * 96;
+        note.x = 12 + (count % 2) * 130;
+        note.y = 12 + Math.floor(count / 2) * 96;
       }
       notes.push(note);
     }
@@ -955,7 +972,7 @@
     var app = document.getElementById("app");
     app.innerHTML =
       '<div class="gate"><div class="gate-card">' +
-      '<div class="gate-brand">🗂️ Organisateur</div>' +
+      '<div class="gate-brand">🗂️ TODO TDAH</div>' +
       '<p class="gate-hint">Cet espace est privé.</p>' +
       '<input type="password" id="gate-password" placeholder="Mot de passe" autocomplete="current-password">' +
       '<button class="btn btn-primary" id="gate-submit">Entrer</button>' +
