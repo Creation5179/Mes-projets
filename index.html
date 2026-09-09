@@ -566,7 +566,7 @@
         modalState = {
           type: "confirm",
           message: "Supprimer tous les post-it et repartir de zéro ?",
-          onConfirm: function () { notes = []; saveNotes(); currentView = { type: "home" }; }
+          onConfirm: function () { notes = []; saveNotes(); currentView = { type: "home" }; history.replaceState(null, "", window.location.pathname + window.location.search); }
         };
         render();
       });
@@ -628,11 +628,47 @@
     }
   }
 
-  function handleNav(type, week, day) {
-    if (type === "home") currentView = { type: "home" };
-    else if (type === "week") currentView = { type: "week", weekKey: week };
-    else if (type === "day") currentView = { type: "day", weekKey: week, day: day };
+  /* ---------- Navigation via l'URL (#) pour que "Précédent" fonctionne ---------- */
+  function viewToHash(view) {
+    if (!view || view.type === "home") return "";
+    if (view.type === "week") return "week/" + encodeURIComponent(view.weekKey);
+    if (view.type === "day") return "day/" + encodeURIComponent(view.weekKey) + "/" + encodeURIComponent(view.day);
+    return "";
+  }
+
+  function hashToView() {
+    var raw = window.location.hash.replace(/^#/, "");
+    if (!raw) return { type: "home" };
+    var parts = raw.split("/").map(function (p) { return decodeURIComponent(p); });
+    if (parts[0] === "week" && parts[1]) return { type: "week", weekKey: parts[1] };
+    if (parts[0] === "day" && parts[1] && parts[2]) return { type: "day", weekKey: parts[1], day: parts[2] };
+    return { type: "home" };
+  }
+
+  function navigateTo(view) {
+    var hash = viewToHash(view);
+    var current = window.location.hash.replace(/^#/, "");
+    if (current === hash) {
+      currentView = view;
+      render();
+    } else {
+      currentView = view;
+      window.location.hash = hash;
+      /* le rendu est déclenché par l'évènement hashchange ci-dessous */
+    }
+  }
+
+  window.addEventListener("hashchange", function () {
+    currentView = hashToView();
     render();
+  });
+
+  function handleNav(type, week, day) {
+    var view = null;
+    if (type === "home") view = { type: "home" };
+    else if (type === "week") view = { type: "week", weekKey: week };
+    else if (type === "day") view = { type: "day", weekKey: week, day: day };
+    if (view) navigateTo(view);
   }
 
   function closeModal() { modalState = null; render(); }
@@ -840,6 +876,7 @@
   /* ---------- Démarrage ---------- */
   function init() {
     loadNotes();
+    currentView = hashToView();
     if (isUnlocked()) render(); else showGate();
   }
   init();
